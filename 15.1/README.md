@@ -9,55 +9,13 @@
 
 ## Terraform-файлы
 
-| Файл | Содержимое |
-|---|---|
-| [versions.tf](terraform/versions.tf) | Версия Terraform и провайдер Yandex Cloud |
-| [variables.tf](terraform/variables.tf) | Параметры облака, SSH и образов |
-| [network.tf](terraform/network.tf) | VPC, подсети, таблица маршрутизации и security group |
-| [compute.tf](terraform/compute.tf) | NAT-инстанс и виртуальные машины public/private |
-| [outputs.tf](terraform/outputs.tf) | Адреса виртуальных машин |
-| [terraform.tfvars.example](terraform/terraform.tfvars.example) | Пример параметров |
-| [.gitignore](terraform/.gitignore) | Исключения для локальных параметров и состояния |
-
-### Запуск
-
-```bash
-git clone https://github.com/Maratq/clopro-homeworks.git
-cd clopro-homeworks/15.1/terraform
-cp terraform.tfvars.example terraform.tfvars
-```
-
-В `terraform.tfvars` задайте `cloud_id`, `folder_id`, путь к публичному SSH-ключу и свой внешний IPv4 в формате `/32` для `admin_cidr`. Авторизация провайдера — через переменную окружения `YC_TOKEN`:
-
-```bash
-export YC_TOKEN="$(yc iam create-token)"
-terraform init
-terraform fmt -check
-terraform validate
-terraform plan -out=network.tfplan
-terraform apply network.tfplan
-```
-
-Используется NAT-образ `fd80mrhj8fl2oe87o4e1` из условия. При его недоступности задайте `nat_image_id` доступного NAT-образа из каталога Yandex Cloud. Публичные адреса назначаются облаком динамически.
-
-### Проверка
-
-```bash
-PUBLIC_IP=$(terraform output -raw public_ip)
-PRIVATE_IP=$(terraform output -raw private_ip)
-ssh "ubuntu@$PUBLIC_IP" 'ping -c 2 ya.ru'
-ssh -J "ubuntu@$PUBLIC_IP" "ubuntu@$PRIVATE_IP" 'ping -c 2 ya.ru'
-yc compute instance list
-terraform output
-```
-
-Удаление созданных учебных ресурсов:
-
-```bash
-terraform destroy
-```
-
-[Документация Yandex Cloud: NAT-инстанс и Terraform](https://yandex.cloud/en/docs/tutorials/routing/nat-instance/terraform).
+- [locals.tf](locals.tf)
+- [main.tf](main.tf)
+- [nat-instance.tf](nat-instance.tf)
+- [outputs.tf](outputs.tf)
+- [providers.tf](providers.tf)
+- [resource-vm.tf](resource-vm.tf)
+- [variables.tf](variables.tf)
 
 ## Решение
 
@@ -120,7 +78,7 @@ resource "yandex_vpc_route_table" "nat-instance-route" {
 }
 ```
 
-Для использования маршрута таблица должна быть привязана к приватной подсети через `route_table_id`. Привязка задана в [network.tf](terraform/network.tf).
+Для использования маршрута таблица должна быть привязана к приватной подсети через `route_table_id`. Привязка задана в [main.tf](main.tf).
 
 В подсети размещена виртуальная машина `private` с внутренним адресом `192.168.20.6`, без публичного IP.
 
