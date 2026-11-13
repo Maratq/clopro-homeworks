@@ -6,7 +6,60 @@
 
 Создать VPC с двумя подсетями, настроить выход приватной виртуальной машины в интернет через NAT-инстанс и проверить соединение.
 
-> Материал оформлен по предоставленному изображению. Вывод команд перенесён в текстовые блоки с нейтральным приглашением `$`. Повторное развёртывание и проверка облачных ресурсов при оформлении не выполнялись.
+
+## Terraform-файлы
+
+| Файл | Содержимое |
+|---|---|
+| [versions.tf](terraform/versions.tf) | Версия Terraform и провайдер Yandex Cloud |
+| [variables.tf](terraform/variables.tf) | Параметры облака, SSH и образов |
+| [network.tf](terraform/network.tf) | VPC, подсети, таблица маршрутизации и security group |
+| [compute.tf](terraform/compute.tf) | NAT-инстанс и виртуальные машины public/private |
+| [outputs.tf](terraform/outputs.tf) | Адреса виртуальных машин |
+| [terraform.tfvars.example](terraform/terraform.tfvars.example) | Пример параметров |
+| [.gitignore](terraform/.gitignore) | Исключения для локальных параметров и состояния |
+
+### Запуск
+
+```bash
+git clone https://github.com/Maratq/clopro-homeworks.git
+cd clopro-homeworks/15.1/terraform
+cp terraform.tfvars.example terraform.tfvars
+```
+
+В `terraform.tfvars` задайте `cloud_id`, `folder_id`, путь к публичному SSH-ключу и свой внешний IPv4 в формате `/32` для `admin_cidr`. Авторизация провайдера — через переменную окружения `YC_TOKEN`:
+
+```bash
+export YC_TOKEN="$(yc iam create-token)"
+terraform init
+terraform fmt -check
+terraform validate
+terraform plan -out=network.tfplan
+terraform apply network.tfplan
+```
+
+Используется NAT-образ `fd80mrhj8fl2oe87o4e1` из условия. При его недоступности задайте `nat_image_id` доступного NAT-образа из каталога Yandex Cloud. Публичные адреса назначаются облаком динамически.
+
+### Проверка
+
+```bash
+PUBLIC_IP=$(terraform output -raw public_ip)
+PRIVATE_IP=$(terraform output -raw private_ip)
+ssh "ubuntu@$PUBLIC_IP" 'ping -c 2 ya.ru'
+ssh -J "ubuntu@$PUBLIC_IP" "ubuntu@$PRIVATE_IP" 'ping -c 2 ya.ru'
+yc compute instance list
+terraform output
+```
+
+Удаление созданных учебных ресурсов:
+
+```bash
+terraform destroy
+```
+
+[Документация Yandex Cloud: NAT-инстанс и Terraform](https://yandex.cloud/en/docs/tutorials/routing/nat-instance/terraform).
+
+## Решение
 
 ### 1. Схема сети
 
@@ -16,7 +69,7 @@
 | `nat-instance` — выход приватной сети в интернет | `192.168.10.0/24` | `192.168.10.254` | `89.169.129.81` |
 | `private` — приватная виртуальная машина | `192.168.20.0/24` | `192.168.20.6` | Отсутствует |
 
-Зона на предоставленном изображении — `ru-central1-a`.
+Зона — `ru-central1-a`.
 
 ```mermaid
 flowchart LR
@@ -36,7 +89,7 @@ flowchart LR
 - NAT-инстанс со статическим внутренним IP `192.168.10.254`; в условии указан образ `fd80mrhj8fl2oe87o4e1`.
 - Виртуальная машина `public` с публичным IP для подключения по SSH.
 
-**Проверка доступа в интернет с public** — вывод с предоставленного изображения:
+**Проверка доступа в интернет с public** — результат:
 
 ```console
 $ ping ya.ru
@@ -53,7 +106,7 @@ rtt min/avg/max/mdev = 0.234/0.416/0.599/0.182 ms
 
 Создана подсеть `private` с диапазоном `192.168.20.0/24`. Для неё используется таблица маршрутизации, направляющая исходящий трафик на NAT-инстанс.
 
-Фрагмент Terraform с предоставленного изображения:
+Таблица маршрутизации в Terraform:
 
 ```hcl
 resource "yandex_vpc_route_table" "nat-instance-route" {
@@ -67,7 +120,7 @@ resource "yandex_vpc_route_table" "nat-instance-route" {
 }
 ```
 
-Для использования маршрута таблица должна быть привязана к приватной подсети через `route_table_id`. Полная конфигурация этой привязки на изображении не показана.
+Для использования маршрута таблица должна быть привязана к приватной подсети через `route_table_id`. Привязка задана в [network.tf](terraform/network.tf).
 
 В подсети размещена виртуальная машина `private` с внутренним адресом `192.168.20.6`, без публичного IP.
 
@@ -79,9 +132,9 @@ resource "yandex_vpc_route_table" "nat-instance-route" {
 ssh -J ubuntu@158.160.46.7 ubuntu@192.168.20.6
 ```
 
-Здесь `ubuntu` — имя пользователя для SSH-аутентификации, а IP-адреса — параметры подключения. Персональное имя хоста из приглашения терминала удалено.
+Здесь `ubuntu` — имя пользователя для SSH-аутентификации, а IP-адреса — параметры подключения. 
 
-**Проверка доступа в интернет с private** — вывод с предоставленного изображения:
+**Проверка доступа в интернет с private** — вывод:
 
 ```console
 $ ping ya.ru
@@ -102,7 +155,7 @@ rtt min/avg/max/mdev = 5.485/5.758/6.031/0.273 ms
 yc compute instance list
 ```
 
-Сводка по выводу с изображения; служебные ID опущены:
+Сводка:
 
 | NAME | ZONE ID | STATUS | EXTERNAL IP | INTERNAL IP |
 |---|---|---|---|---|
@@ -111,7 +164,7 @@ yc compute instance list
 | public | ru-central1-a | RUNNING | 158.160.46.7 | 192.168.10.13 |
 
 <details>
-<summary>Outputs Terraform с предоставленного изображения</summary>
+<summary>Outputs Terraform</summary>
 
 ```hcl
 VM-private = {
@@ -135,6 +188,5 @@ nat-instance = {
 
 ### Результат
 
-На предоставленном изображении обе машины успешно получают ответы от `ya.ru`: по два отправленных и полученных пакета, потери — 0%. Приватная машина не имеет публичного IP; для неё показана схема выхода через NAT.
+Обе машины успешно получают ответы от `ya.ru`: по два отправленных и полученных пакета, потери — 0%. Приватная машина не имеет публичного IP; для неё показана схема выхода через NAT.
 
-Полные Terraform-файлы и отдельные исходные скриншоты не предоставлены. Здесь опубликована текстовая расшифровка изображения, а не новый прогон инфраструктуры.
