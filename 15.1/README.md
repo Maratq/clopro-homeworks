@@ -145,6 +145,6 @@ nat-instance = {
 </details>
 
 ### Результат
-
-Обе машины успешно получают ответы от `ya.ru`: по два отправленных и полученных пакета, потери — 0%. Приватная машина не имеет публичного IP; для неё показана схема выхода через NAT.
+<img width="593" height="91" alt="image" src="https://github.com/user-attachments/assets/12f084ce-ac73-4e44-a00b-92c954234887" />
+<img width="178" height="162" alt="image" src="https://github.com/user-attachments/assets/0eba694b-ccb3-41b4-85ed-cb760f0c2232" />
 
