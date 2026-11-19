@@ -1,0 +1,23 @@
+#cloud-config
+write_files:
+  - path: /var/www/html/index.php
+    permissions: '0644'
+    content: |
+      <!doctype html>
+      <html lang="ru">
+      <head><meta charset="utf-8"><title>LAMP / Network Load Balancer</title></head>
+      <body>
+        <h1>Yandex Cloud: LAMP + Network Load Balancer</h1>
+        <p>VM: <strong><?php echo htmlspecialchars(gethostname()); ?></strong></p>
+        <p><a href="${image_url}">Открыть картинку из Object Storage</a></p>
+        <img src="${image_url}" alt="Cloud infrastructure" width="640">
+      </body>
+      </html>
+  - path: /var/www/html/healthz
+    permissions: '0644'
+    content: |
+      ok
+runcmd:
+  - [sh, -c, 'if [ -f /var/www/html/index.html ]; then mv /var/www/html/index.html /var/www/html/index.html.original; fi']
+  - [systemctl, enable, --now, apache2]
+  - [systemctl, restart, apache2]

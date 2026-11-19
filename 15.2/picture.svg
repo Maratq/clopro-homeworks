@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" viewBox="0 0 640 240">
+  <rect width="640" height="240" rx="16" fill="#162335"/>
+  <text x="320" y="48" text-anchor="middle" fill="white" font-family="sans-serif" font-size="22">Yandex Cloud · LAMP × 3</text>
+  <path d="M320 100L130 165M320 100V165M320 100L510 165" stroke="#ffd65a" stroke-width="4"/>
+  <rect x="240" y="70" width="160" height="44" rx="8" fill="#ffd65a"/>
+  <text x="320" y="98" text-anchor="middle" font-family="sans-serif" font-size="18">Load Balancer</text>
+  <g fill="#62b7db"><rect x="65" y="160" width="130" height="48" rx="8"/><rect x="255" y="160" width="130" height="48" rx="8"/><rect x="445" y="160" width="130" height="48" rx="8"/></g>
+  <g text-anchor="middle" font-family="sans-serif" font-size="18"><text x="130" y="190">LAMP 1</text><text x="320" y="190">LAMP 2</text><text x="510" y="190">LAMP 3</text></g>
+</svg>

@@ -1,0 +1,5 @@
+cloud_id    = "b1gmbfas45d7912pmsh3"
+folder_id   = "b1gv3l8a5jtk7slrt2ju"
+bucket_name = "marat-lamp-20261118-replace-with-unique-suffix"
+
+# existing_network_id = "<ID существующей сети в этом каталоге>"
