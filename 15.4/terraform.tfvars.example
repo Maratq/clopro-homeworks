@@ -1,0 +1,7 @@
+cloud_id            = "replace-cloud-id"
+folder_id           = "replace-folder-id"
+network_id          = "replace-vpc-id"
+public_a_subnet_id  = "replace-public-subnet-id"
+private_a_subnet_id = "replace-private-subnet-id"
+kms_key_id          = "replace-15-3-key-id"
+operator_cidr       = "203.0.113.10/32"

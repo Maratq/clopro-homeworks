@@ -1,0 +1,29 @@
+--- a/15.2/main.tf
++++ b/15.2/main.tf
+@@ -77,6 +77,17 @@
+ }
+ 
+ resource "yandex_storage_bucket" "picture" {
++  depends_on = [yandex_kms_symmetric_key_iam_member.storage]
++
++  server_side_encryption_configuration {
++    rule {
++      apply_server_side_encryption_by_default {
++        sse_algorithm     = "aws:kms"
++        kms_master_key_id = yandex_kms_symmetric_key.homework.id
++      }
++    }
++  }
++
+   bucket     = var.bucket_name
+   folder_id  = var.folder_id
+   access_key = yandex_iam_service_account_static_access_key.storage.access_key
+@@ -89,7 +100,7 @@
+   source       = "${path.module}/picture.svg"
+   source_hash  = filemd5("${path.module}/picture.svg")
+   content_type = "image/svg+xml"
+-  acl          = "public-read"
++  acl          = "private"
+   access_key   = yandex_iam_service_account_static_access_key.storage.access_key
+   secret_key   = yandex_iam_service_account_static_access_key.storage.secret_key
+ }
